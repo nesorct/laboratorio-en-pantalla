@@ -84,7 +84,19 @@ input{font-family:inherit}
 .carta{background:var(--card); color:var(--ink); border-radius:22px; padding:clamp(14px,2.4vw,26px)}
 .enunciado{font-size:clamp(1.1rem,2.8vw,1.7rem); font-weight:800; line-height:1.25; margin:0 0 4px; text-align:center}
 .pista{font-size:clamp(.88rem,1.7vw,1.02rem); font-weight:400; color:var(--ink-soft); text-align:center; margin:0}
+/* Los instrumentos se dibujan con tinta oscura sobre claro: son papel, y sus
+   colores están escritos a mano, no salen del tema. Los números que caen
+   FUERA del dibujo -la escala del termómetro, la de la probeta, los ×10 de
+   la escalera- quedaban en modo oscuro tinta oscura sobre tarjeta oscura, y
+   no se leían. Así que el dibujo lleva siempre su propio folio blanco
+   debajo, vaya el resto claro u oscuro.
+   El :not(:empty) es necesario: hay preguntas sin dibujo -la media de tres
+   tiempos, las arandelas- y ahí un recuadro blanco vacío parecería un fallo. */
 .instrumento{margin:10px 0 4px}
+.instrumento:not(:empty){
+  background:#ffffff; border:1px solid #e3ebe7; border-radius:14px;
+  padding:10px 12px;
+}
 .instrumento svg{width:100%; height:auto; max-height:42vh; display:block}
 
 /* respuesta: el número y la unidad, separados a propósito */
