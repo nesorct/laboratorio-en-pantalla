@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>El laboratorio de la pantalla</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --stage:#10322a;
+  --stage-2:#071c17;
+  --card:#ffffff;
+  --ink:#0c2119;
+  --ink-soft:#4a6158;
+  --chalk:#f2f8f5;
+  --line:#d3e2da;
+  --sun:#ffc93c;
+  --mint:#3ecf9a;
+  --coral:#ff6b6b;
+  --lav:#7fd1b9;
+  --ok:#1f9d5a;
+  --bad:#d64040;
+  --acento:#2E6F52;
+  --num:#1d6b4f;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --stage:#08241d; --stage-2:#04120e; --card:#13302a; --ink:#eef7f3;
+    --ink-soft:#a5c2b7; --line:#255045; --chalk:#eef7f3; --num:#7fe0bb;
+  }
+}
+:root[data-theme="dark"]{
+  --stage:#08241d; --stage-2:#04120e; --card:#13302a; --ink:#eef7f3;
+  --ink-soft:#a5c2b7; --line:#255045; --chalk:#eef7f3; --num:#7fe0bb;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%}
+body{
+  margin:0; height:100%;
+  background:radial-gradient(120% 90% at 50% 0%, var(--stage) 0%, var(--stage-2) 100%);
+  color:var(--chalk);
+  font-family:Lexend,"Segoe UI",system-ui,sans-serif;
+  font-weight:600;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit; cursor:pointer; border:none}
+input{font-family:inherit}
+:focus-visible{outline:4px solid var(--sun); outline-offset:3px}
+@media (prefers-reduced-motion: reduce){*{animation:none!important; transition:none!important}}
+
+.wrap{max-width:1200px; margin:0 auto; padding:clamp(12px,2vw,26px); min-height:100%;
+      display:flex; flex-direction:column; gap:clamp(10px,1.8vh,20px)}
+
+/* ---------- portada ---------- */
+#inicio{flex:1; display:flex; flex-direction:column; justify-content:center; gap:clamp(16px,3vh,30px); text-align:center}
+.titulo{font-size:clamp(2.1rem,7vw,4.6rem); font-weight:800; line-height:.98; letter-spacing:-.03em; margin:0}
+.titulo span{display:block; color:var(--sun)}
+.sub{color:#bcd8cc; font-weight:400; font-size:clamp(1rem,2.2vw,1.3rem); max-width:56ch; margin:0 auto; line-height:1.5}
+.bloque{background:rgba(255,255,255,.07); border:2px solid rgba(255,255,255,.14); border-radius:20px; padding:clamp(14px,2.4vw,22px)}
+.bloque h2{margin:0 0 12px; font-size:clamp(1rem,2vw,1.2rem); font-weight:600; color:#bcd8cc}
+
+.retos{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px}
+.reto{background:var(--card); color:var(--ink); border-radius:18px; padding:16px 18px 18px; text-align:left;
+      border:4px solid transparent; display:flex; flex-direction:column; gap:6px}
+.reto:hover{border-color:var(--sun)}
+.reto b{font-size:clamp(1.05rem,2.2vw,1.3rem); font-weight:800; display:flex; align-items:center; gap:.5em}
+.reto small{font-weight:400; font-size:.92rem; color:var(--ink-soft); line-height:1.4}
+.reto .sello{margin-left:auto; font-size:1.3rem}
+.reto.hecho{border-color:var(--mint)}
+
+/* ---------- juego ---------- */
+#juego{flex:1; display:none; flex-direction:column; gap:clamp(8px,1.5vh,16px)}
+.barra-top{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between}
+.progreso{flex:1; min-width:160px; height:12px; background:rgba(255,255,255,.14); border-radius:99px; overflow:hidden}
+.progreso i{display:block; height:100%; background:var(--mint); border-radius:99px; transition:width .3s}
+.racha{font-size:.95rem; font-weight:600; color:#bcd8cc}
+.racha b{color:var(--sun)}
+
+.carta{background:var(--card); color:var(--ink); border-radius:22px; padding:clamp(14px,2.4vw,26px)}
+.enunciado{font-size:clamp(1.1rem,2.8vw,1.7rem); font-weight:800; line-height:1.25; margin:0 0 4px; text-align:center}
+.pista{font-size:clamp(.88rem,1.7vw,1.02rem); font-weight:400; color:var(--ink-soft); text-align:center; margin:0}
+.instrumento{margin:10px 0 4px}
+.instrumento svg{width:100%; height:auto; max-height:42vh; display:block}
+
+/* respuesta: el número y la unidad, separados a propósito */
+.respuesta{display:flex; flex-wrap:wrap; gap:12px; align-items:stretch; justify-content:center; margin-top:10px}
+.campo{display:flex; align-items:center; gap:8px; background:var(--card); border:3px solid var(--line);
+       border-radius:16px; padding:6px 10px}
+.campo input{width:clamp(110px,18vw,190px); border:none; background:transparent; color:var(--ink);
+       font-size:clamp(1.6rem,4vw,2.4rem); font-weight:800; text-align:right; outline:none;
+       font-variant-numeric:tabular-nums}
+.campo label{font-size:.8rem; font-weight:600; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.06em}
+.unidades{display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center}
+.uni{background:var(--card); color:var(--ink); border:3px solid var(--line); border-radius:14px;
+     padding:.5em 1em; font-size:clamp(1.05rem,2.4vw,1.5rem); font-weight:800}
+.uni[aria-pressed="true"]{background:var(--acento); color:#fff; border-color:var(--acento)}
+
+.opciones{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:8px}
+@media (max-width:620px){.opciones{grid-template-columns:1fr}}
+.op{background:var(--card); color:var(--ink); border:4px solid transparent; border-radius:16px;
+    padding:clamp(11px,2vw,18px); font-size:clamp(1rem,2.2vw,1.3rem); font-weight:700; text-align:left;
+    display:flex; align-items:center; gap:.7em; line-height:1.3}
+.op .letra{background:var(--lav); color:#06301f; width:1.7em; height:1.7em; border-radius:11px;
+    display:grid; place-items:center; font-size:.75em; flex:0 0 auto; font-weight:800}
+.op:hover:not(:disabled){border-color:var(--sun)}
+.op:disabled{cursor:default}
+.op.bien{background:var(--ok); color:#fff; border-color:#fff}
+.op.bien .letra{background:rgba(255,255,255,.3); color:#fff}
+.op.mal{background:var(--bad); color:#fff}
+.op.mal .letra{background:rgba(255,255,255,.3); color:#fff}
+.op.gris{opacity:.4}
+
+.barra{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center; min-height:3.2em}
+.btn{border-radius:14px; padding:.62em 1.25em; font-size:clamp(.95rem,1.9vw,1.2rem); font-weight:600;
+     background:rgba(255,255,255,.12); color:var(--chalk); border:2px solid rgba(255,255,255,.25)}
+.btn:hover{background:rgba(255,255,255,.22)}
+.btn.principal{background:var(--sun); color:#14203f; border-color:var(--sun); font-weight:800}
+.btn.grande{background:var(--mint); color:#06301f; border-color:var(--mint); font-weight:800;
+     font-size:clamp(1.1rem,2.6vw,1.5rem); padding:.55em 1.5em; border-radius:18px}
+
+.aviso{width:100%; text-align:center; font-size:clamp(1rem,2.2vw,1.35rem); font-weight:800}
+.aviso.ok{color:var(--mint)} .aviso.no{color:var(--coral)}
+.aviso small{display:block; font-weight:400; font-size:.78em; color:#bcd8cc; margin-top:4px; line-height:1.4}
+
+/* ---------- parte final ---------- */
+#final{display:none; flex:1; flex-direction:column; justify-content:center; text-align:center; gap:16px}
+.carnet{background:var(--card); color:var(--ink); border-radius:22px; padding:clamp(16px,3vw,28px);
+        max-width:680px; margin:0 auto; width:100%; text-align:left}
+.carnet h3{margin:0 0 4px; font-size:clamp(1.2rem,3vw,1.7rem)}
+.carnet .quien{font-weight:400; color:var(--ink-soft); margin:0 0 14px; font-size:.95rem}
+.sellos{display:grid; gap:9px}
+.sello-fila{display:flex; align-items:center; gap:12px; border:2px solid var(--line); border-radius:14px; padding:9px 13px}
+.sello-fila.si{border-color:var(--mint); background:rgba(62,207,154,.1)}
+.sello-fila b{flex:1; font-size:1.02rem}
+.sello-fila i{font-style:normal; font-size:1.5rem}
+.sello-fila span{font-weight:400; color:var(--ink-soft); font-size:.9rem; font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- PORTADA -->
+  <section id="inicio">
+    <h1 class="titulo">El laboratorio<span>de la pantalla</span></h1>
+    <p class="sub">Aquí se mide sin romper nada. Cinco retos: elegir el instrumento,
+      leerlo bien, escribir la medida con su unidad y fiarte de varias medidas y no de una.</p>
+
+    <div class="bloque">
+      <h2>Elige un reto</h2>
+      <div class="retos" id="menu"></div>
+    </div>
+
+    <p class="sub" id="avanceTotal"></p>
+  </section>
+
+  <!-- JUEGO -->
+  <section id="juego">
+    <div class="barra-top">
+      <button class="btn" id="btnVolver">← Volver a los retos</button>
+      <div class="progreso"><i id="progreso"></i></div>
+      <span class="racha" id="racha"></span>
+    </div>
+    <div class="carta">
+      <p class="enunciado" id="enunciado"></p>
+      <p class="pista" id="pista"></p>
+      <div class="instrumento" id="instrumento"></div>
+      <div id="zona"></div>
+    </div>
+    <div class="barra" id="barra"></div>
+  </section>
+
+  <!-- PARTE FINAL -->
+  <section id="final">
+    <h1 class="titulo">Tu parte<span>de medidas</span></h1>
+    <div class="carnet" id="carnet"></div>
+    <button class="btn grande" id="btnOtra">Volver a los retos</button>
+  </section>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* =====================================================================
+   EL LABORATORIO DE LA PANTALLA
+   Unidad FQ 1 del ámbito · 2.º de ESO · método científico y medida
+
+   POR QUÉ ESTO Y NO UN CUESTIONARIO. Un cuestionario de «¿con qué se mide
+   la masa?» se hace en papel y se acabó. Lo que una pantalla hace mejor que
+   el papel -y mejor que el taller, donde cada uno toca el instrumento ocho
+   minutos- es REPETIR: leer una regla veinte veces seguidas con corrección
+   inmediata. Por eso el reto central es leer instrumentos dibujados.
+
+   LA REGLA QUE ATRAVIESA TODO: una medida es un número Y una unidad. Aquí
+   el número y la unidad se piden por separado, y acertar el número con la
+   unidad mal cuenta como fallo, con su explicación. Es lo mismo que se les
+   repite en el taller: «32 mm, no 32».
+
+   NO GUARDA NADA. Ni nombres ni resultados: al terminar sale un parte en
+   pantalla que el alumno enseña o del que se hace una foto. Todo lo que se
+   sabe de la partida se pierde al cerrar la pestaña, y así tiene que ser.
+   ===================================================================== */
+
+const $ = id => document.getElementById(id);
+const ale = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const elegir = arr => arr[ale(0,arr.length-1)];
+const barajar = arr => { const c=arr.slice(); for(let i=c.length-1;i>0;i--){const j=ale(0,i); [c[i],c[j]]=[c[j],c[i]];} return c; };
+const LETRAS = ["A","B","C","D"];
+const RONDAS = 8;          // por reto: corto, para que dé tiempo a varios
+const PARA_SELLO = 6;      // aciertos necesarios para ganar el sello
+
+/* número con coma decimal, que es como se escribe aquí */
+function nf(x, dec){
+  dec = dec===undefined ? 0 : dec;
+  return x.toFixed(dec).replace('.', ',');
+}
+/* lo que teclea el alumno: admite coma y punto, y se traga los espacios */
+function leerNumero(t){
+  const s = String(t).trim().replace(/\s+/g,'').replace(',', '.');
+  if(s==='' || !/^-?\d*\.?\d+$/.test(s)) return null;
+  return Number(s);
+}
+
+/* ---------------------------------------------------------------------
+   LA BOLSA. Sacar al azar de una lista de diez y pedir ocho repite casi
+   siempre: la probabilidad de que NO salga ninguna repetida es del 2 %.
+   Una bolsa saca sin devolver, y solo se rellena -barajada- cuando se
+   vacía. Se vacían todas al empezar un reto, para que dentro de una misma
+   tanda de ocho no pueda repetirse nada.
+   --------------------------------------------------------------------- */
+const BOLSAS = [];
+function bolsa(lista){
+  let quedan = [];
+  const sacar = function(){
+    if(!quedan.length) quedan = barajar(lista);
+    return quedan.pop();
+  };
+  sacar.vaciar = function(){ quedan = []; };
+  BOLSAS.push(sacar);
+  return sacar;
+}
+function vaciarBolsas(){ BOLSAS.forEach(b=>b.vaciar()); }
+
+const estado = {
+  reto: null, ronda: 0, aciertos: 0, racha: 0, mejorRacha: 0,
+  vistas: [],      // las preguntas ya salidas en esta tanda
+  pregunta: null, respondida: false, unidadElegida: null,
+  sellos: {}       // reto -> aciertos conseguidos
+};
+
+/* =====================================================================
+   LOS INSTRUMENTOS, dibujados en SVG
+
+   Se dibujan aquí y no se traen de ningún sitio: el fichero tiene que
+   poder abrirse de un doble clic en un ordenador del aula sin internet.
+   Cada uno recibe el valor que hay que leer y, si se pide, lo señala.
+   ===================================================================== */
+const TINTA = '#0c2119', GRIS = '#4a6158', ACE = '#2E6F52', ROJO = '#d64040';
+
+function marco(w,h,extra){
+  return '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg" '+
+         'font-family="Lexend, sans-serif">'+(extra||'');
+}
+
+/* ---------- regla graduada en milímetros ---------- */
+function regla(desdeMm, largoMm, señala){
+  const W=1000, H=210, x0=55, x1=945, maxMm=160;
+  const px = mm => x0 + mm/maxMm*(x1-x0);
+  let s = marco(W,H);
+  /* la barra que hay que medir, por encima de la regla */
+  const a=px(desdeMm), b=px(desdeMm+largoMm);
+  s += '<rect x="'+a+'" y="26" width="'+(b-a)+'" height="34" rx="6" fill="#ffc93c" stroke="'+TINTA+'" stroke-width="3"/>';
+  s += '<line x1="'+a+'" y1="20" x2="'+a+'" y2="96" stroke="'+ROJO+'" stroke-width="2.5" stroke-dasharray="6 5"/>';
+  s += '<line x1="'+b+'" y1="20" x2="'+b+'" y2="96" stroke="'+ROJO+'" stroke-width="2.5" stroke-dasharray="6 5"/>';
+  /* el cuerpo de la regla */
+  s += '<rect x="'+(x0-28)+'" y="96" width="'+(x1-x0+56)+'" height="86" rx="7" fill="#f6f2e4" stroke="'+TINTA+'" stroke-width="3"/>';
+  for(let mm=0; mm<=maxMm; mm++){
+    const x=px(mm), cm=(mm%10===0), medio=(mm%5===0);
+    const alto = cm?34:(medio?22:13);
+    s += '<line x1="'+x+'" y1="100" x2="'+x+'" y2="'+(100+alto)+'" stroke="'+TINTA+'" stroke-width="'+(cm?3:1.6)+'"/>';
+    if(cm) s += '<text x="'+x+'" y="'+(100+alto+24)+'" text-anchor="middle" font-size="21" font-weight="600" fill="'+TINTA+'">'+(mm/10)+'</text>';
+  }
+  s += '<text x="'+(x1+18)+'" y="176" text-anchor="end" font-size="17" fill="'+GRIS+'">cm</text>';
+  if(señala){
+    s += '<text x="'+((a+b)/2)+'" y="16" text-anchor="middle" font-size="22" font-weight="800" fill="'+ROJO+'">'+
+         nf(largoMm)+' mm</text>';
+  }
+  return s+'</svg>';
+}
+
+/* ---------- probeta graduada ---------- */
+function probeta(mL, maxML, paso, señala){
+  const W=560, H=430, x0=190, ancho=180, yTop=42, yBase=372;
+  const py = v => yBase - v/maxML*(yBase-yTop);
+  let s = marco(W,H);
+  const yliq = py(mL);
+  /* el líquido primero, para que el vidrio quede encima */
+  s += '<rect x="'+(x0+4)+'" y="'+yliq+'" width="'+(ancho-8)+'" height="'+(yBase-yliq)+'" fill="#7fd1e8" opacity=".85"/>';
+  /* el menisco: cóncavo, que es lo que hay que aprender a mirar */
+  s += '<path d="M '+(x0+4)+' '+yliq+' Q '+(x0+ancho/2)+' '+(yliq+13)+' '+(x0+ancho-4)+' '+yliq+
+       ' L '+(x0+ancho-4)+' '+(yliq+16)+' L '+(x0+4)+' '+(yliq+16)+' Z" fill="#7fd1e8"/>';
+  s += '<path d="M '+(x0+4)+' '+yliq+' Q '+(x0+ancho/2)+' '+(yliq+13)+' '+(x0+ancho-4)+' '+yliq+
+       '" fill="none" stroke="#2f88a8" stroke-width="3"/>';
+  s += '<rect x="'+x0+'" y="'+(yTop-18)+'" width="'+ancho+'" height="'+(yBase-yTop+30)+'" rx="8" fill="none" stroke="'+TINTA+'" stroke-width="4"/>';
+  s += '<rect x="'+(x0-22)+'" y="'+(yBase+12)+'" width="'+(ancho+44)+'" height="20" rx="8" fill="#e6ece9" stroke="'+TINTA+'" stroke-width="3"/>';
+  /* rayas finas cada medio paso y gordas -con numero- cada paso, que es
+     como esta graduada una probeta de verdad y como lo dice la pista */
+  for(let v=0; v<=maxML; v+=paso/2){
+    const y=py(v), gordo=(Math.abs(v % paso) < 0.001);
+    s += '<line x1="'+x0+'" y1="'+y+'" x2="'+(x0+(gordo?44:26))+'" y2="'+y+'" stroke="'+TINTA+'" stroke-width="'+(gordo?3:1.6)+'"/>';
+    if(gordo) s += '<text x="'+(x0-12)+'" y="'+(y+7)+'" text-anchor="end" font-size="20" font-weight="600" fill="'+TINTA+'">'+v+'</text>';
+  }
+  s += '<text x="'+(x0+ancho+16)+'" y="'+(yTop+2)+'" font-size="18" fill="'+GRIS+'">mL</text>';
+  if(señala){
+    s += '<line x1="'+(x0+ancho+6)+'" y1="'+yliq+'" x2="'+(x0+ancho+70)+'" y2="'+yliq+'" stroke="'+ROJO+'" stroke-width="3"/>';
+    s += '<text x="'+(x0+ancho+76)+'" y="'+(yliq+7)+'" font-size="22" font-weight="800" fill="'+ROJO+'">'+nf(mL)+' mL</text>';
+  }
+  return s+'</svg>';
+}
+
+/* ---------- termómetro ---------- */
+function termometro(gc, señala){
+  const W=520, H=430, x=250, yTop=44, yBase=344, min=-10, max=50;
+  const py = t => yBase - (t-min)/(max-min)*(yBase-yTop);
+  let s = marco(W,H);
+  s += '<rect x="'+(x-15)+'" y="'+(yTop-16)+'" width="30" height="'+(yBase-yTop+40)+'" rx="15" fill="#f3f6f4" stroke="'+TINTA+'" stroke-width="3.5"/>';
+  s += '<circle cx="'+x+'" cy="'+(yBase+42)+'" r="30" fill="#f3f6f4" stroke="'+TINTA+'" stroke-width="3.5"/>';
+  const y=py(gc);
+  s += '<rect x="'+(x-7)+'" y="'+y+'" width="14" height="'+(yBase+42-y)+'" fill="'+ROJO+'"/>';
+  s += '<circle cx="'+x+'" cy="'+(yBase+42)+'" r="22" fill="'+ROJO+'"/>';
+  for(let t=min; t<=max; t++){
+    const yy=py(t), diez=(t%10===0), cinco=(t%5===0);
+    s += '<line x1="'+(x+16)+'" y1="'+yy+'" x2="'+(x+16+(diez?26:(cinco?17:10)))+'" y2="'+yy+'" stroke="'+TINTA+'" stroke-width="'+(diez?3:1.5)+'"/>';
+    if(diez) s += '<text x="'+(x+50)+'" y="'+(yy+7)+'" font-size="20" font-weight="600" fill="'+TINTA+'">'+t+'</text>';
+  }
+  s += '<text x="'+(x+50)+'" y="'+(yTop-14)+'" font-size="18" fill="'+GRIS+'">°C</text>';
+  if(señala){
+    s += '<line x1="'+(x-70)+'" y1="'+y+'" x2="'+(x-20)+'" y2="'+y+'" stroke="'+ROJO+'" stroke-width="3"/>';
+    s += '<text x="'+(x-76)+'" y="'+(y+7)+'" text-anchor="end" font-size="22" font-weight="800" fill="'+ROJO+'">'+nf(gc)+' °C</text>';
+  }
+  return s+'</svg>';
+}
+
+/* ---------- balanza de aguja ---------- */
+function balanza(g, maxG, señala){
+  /* el circulo llega hasta r+26 por debajo del centro: el lienzo tiene que
+     dar de si hasta cy+r+26, o se corta */
+  const W=560, H=474, cx=280, cy=250, r=180;
+  /* media luna: la aguja recorre 240 grados */
+  const a0=150, a1=390;
+  const ang = v => (a0 + v/maxG*(a1-a0)) * Math.PI/180;
+  const pt = (v,rr) => [cx + rr*Math.cos(ang(v)), cy + rr*Math.sin(ang(v))];
+  let s = marco(W,H);
+  s += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(r+26)+'" fill="#f3f6f4" stroke="'+TINTA+'" stroke-width="4"/>';
+  const paso = maxG/10;
+  for(let v=0; v<=maxG; v+=paso/5){
+    const gordo = Math.abs(v % paso) < 0.001;
+    const p1=pt(v, r), p2=pt(v, r-(gordo?24:13));
+    s += '<line x1="'+p1[0].toFixed(1)+'" y1="'+p1[1].toFixed(1)+'" x2="'+p2[0].toFixed(1)+'" y2="'+p2[1].toFixed(1)+
+         '" stroke="'+TINTA+'" stroke-width="'+(gordo?3:1.5)+'"/>';
+    if(gordo){
+      const p3=pt(v, r-46);
+      s += '<text x="'+p3[0].toFixed(1)+'" y="'+(p3[1]+7).toFixed(1)+'" text-anchor="middle" font-size="19" font-weight="600" fill="'+TINTA+'">'+v+'</text>';
+    }
+  }
+  const pa = pt(g, r-34);
+  s += '<line x1="'+cx+'" y1="'+cy+'" x2="'+pa[0].toFixed(1)+'" y2="'+pa[1].toFixed(1)+'" stroke="'+ROJO+'" stroke-width="5" stroke-linecap="round"/>';
+  s += '<circle cx="'+cx+'" cy="'+cy+'" r="14" fill="'+TINTA+'"/>';
+  s += '<text x="'+cx+'" y="'+(cy+80)+'" text-anchor="middle" font-size="19" fill="'+GRIS+'">gramos</text>';
+  if(señala){
+    /* abajo del todo: la esfera solo ocupa de 150 a 390 grados, así que el
+       fondo del círculo está libre. Arriba caía sobre los números */
+    s += '<text x="'+cx+'" y="'+(cy+124)+'" text-anchor="middle" font-size="27" font-weight="800" fill="'+ROJO+'">'+nf(g)+' g</text>';
+  }
+  return s+'</svg>';
+}
+
+/* ---------- la escalera de las unidades ----------
+   Las tres magnitudes que comparten escalera decimal. El tiempo NO está, y
+   no es un olvido: los minutos van de sesenta en sesenta y meterlo aquí
+   enseñaría justo lo contrario de lo que la escalera dice. */
+const ESCALERAS = {
+  longitud:  {nombre:'longitud',  us:['km','hm','dam','m','dm','cm','mm']},
+  masa:      {nombre:'masa',      us:['kg','hg','dag','g','dg','cg','mg']},
+  capacidad: {nombre:'capacidad', us:['kL','hL','daL','L','dL','cL','mL']}
+};
+
+function escalera(us, iOrigen, iDestino){
+  /* CUATRO BANDAS, de arriba abajo, y nada se sale de la suya:
+
+       32   el factor del salto           ×100
+       54   de cuántos escalones es       2 escalones abajo
+       76   la flecha, recta              ────────►
+       92   la escalera                   [km][hm][dam]...
+      179   lo que cuesta cada escalón    ×10  ×10  ×10
+      206   la regla, escrita             cada escalón: ×10 ...
+
+     Antes esto era un arco por encima de las cajas con las dos etiquetas
+     colgando de él, y se comía los «:10» y la primera fila de cajas. Una
+     flecha recta en su propia banda no puede tapar nada. */
+  const W=1000, H=224, n=us.length;
+  const ancho=110, hueco=30;
+  const total = n*ancho + (n-1)*hueco;
+  const x0 = (W-total)/2, yCaja=92, alto=64;
+  const eje = k => x0 + k*(ancho+hueco) + ancho/2;
+  const a = eje(iOrigen), b = eje(iDestino);
+  const saltos = Math.abs(iDestino-iOrigen);
+  const baja = b > a;
+  let s = marco(W,H);
+
+  /* ---- el salto, arriba, en su banda vacía ---- */
+  s += '<text x="'+((a+b)/2)+'" y="32" text-anchor="middle" font-size="28" '+
+       'font-weight="800" fill="'+ROJO+'">'+(baja ? '&#215;' : ':')+
+       Math.pow(10,saltos)+'</text>';
+  s += '<text x="'+((a+b)/2)+'" y="54" text-anchor="middle" font-size="15" '+
+       'font-weight="600" fill="'+GRIS+'">'+saltos+
+       (saltos===1?' escalón ':' escalones ')+(baja?'abajo':'arriba')+'</text>';
+  const punta = baja ? b-4 : b+4;
+  const cola  = baja ? a+4 : a-4;
+  s += '<line x1="'+cola+'" y1="76" x2="'+(punta-(baja?15:-15))+'" y2="76" '+
+       'stroke="'+ROJO+'" stroke-width="4"/>';
+  s += '<circle cx="'+cola+'" cy="76" r="6" fill="'+ROJO+'"/>';
+  s += '<polygon points="'+punta+',76 '+(punta-(baja?16:-16))+',67 '+
+       (punta-(baja?16:-16))+',85" fill="'+ROJO+'"/>';
+
+  /* ---- la escalera entera ---- */
+  for(let k=0;k<n;k++){
+    const x = x0 + k*(ancho+hueco);
+    const origen = (k===iOrigen), destino = (k===iDestino);
+    const relleno = origen ? '#2E6F52' : (destino ? '#ffc93c' : '#f3f6f4');
+    const borde   = origen ? '#2E6F52' : (destino ? '#e0a800' : '#cfd9d4');
+    const letra   = origen ? '#ffffff' : TINTA;
+    s += '<rect x="'+x+'" y="'+yCaja+'" width="'+ancho+'" height="'+alto+'" rx="9" fill="'+
+         relleno+'" stroke="'+borde+'" stroke-width="'+((origen||destino)?4:2)+'"/>';
+    s += '<text x="'+eje(k)+'" y="'+(yCaja+43)+'" text-anchor="middle" font-size="27" '+
+         'font-weight="800" fill="'+letra+'">'+us[k]+'</text>';
+  }
+
+  /* ---- lo que cuesta cada escalón, debajo ---- */
+  for(let k=0;k<n-1;k++){
+    const x = x0 + k*(ancho+hueco) + ancho + hueco/2;
+    s += '<text x="'+x+'" y="'+(yCaja+alto+23)+'" text-anchor="middle" font-size="15" '+
+         'font-weight="600" fill="'+GRIS+'">&#215;10</text>';
+  }
+  s += '<text x="'+(W/2)+'" y="'+(yCaja+alto+50)+'" text-anchor="middle" font-size="15" '+
+       'font-weight="400" fill="'+GRIS+'">Cada escal&#243;n: &#215;10 hacia la derecha, '+
+       ':10 hacia la izquierda</text>';
+  return s+'</svg>';
+}
+
+/* =====================================================================
+   RETO 5 · La escalera
+   Se ve la escalera entera y se pasa de una unidad a otra. Los numeros se
+   eligen para que el resultado salga limpio EN LOS DOS SENTIDOS: se sortea
+   primero el numero bonito y despues se coloca en el lado que toque.
+   ===================================================================== */
+const BONITOS = [1,2,3,4,5,6,7,8,9,12,15,20,25,30,40,50,75,120,250,500,
+                 1.5,2.5,4.5,7.5,12.5];
+const sacaEscalera = bolsa(['longitud','masa','capacidad']);
+
+function pregEscalera(){
+  const e = ESCALERAS[sacaEscalera()];
+  const us = e.us;
+  const saltos = elegir([1,1,2,2,2,3,3]);
+  const baja = Math.random() < 0.5;            // bajar es multiplicar
+  let i = ale(0, us.length-1-saltos);
+  let iOrigen, iDestino;
+  if(baja){ iOrigen = i; iDestino = i+saltos; }
+  else    { iOrigen = i+saltos; iDestino = i; }
+
+  const factor = Math.pow(10, saltos);
+  /* con tres escalones y un 500 saldría medio millón de milímetros: números
+     así no enseñan a usar la escalera, solo asustan */
+  const bonito = elegir(BONITOS.filter(x => x*factor <= 30000));
+  /* el numero bonito se pone SIEMPRE del lado pequeño de la operacion:
+     bajando es el de partida y subiendo es el resultado. Así ninguno de los
+     dos sale con una ristra de decimales */
+  const valor = baja ? bonito : Math.round(bonito*factor*100)/100;
+  const res   = baja ? Math.round(bonito*factor*100)/100 : bonito;
+  const dec   = Number.isInteger(res) ? 0 : 1;
+
+  /* las unidades que se ofrecen son vecinas en la escalera: hay que mirar
+     en cuál se está escribiendo, no dar por hecho */
+  const cerca = [];
+  for(let d=-2; d<=2; d++){
+    const k = iDestino+d;
+    if(k>=0 && k<us.length && k!==iDestino) cerca.push(us[k]);
+  }
+  const unidades = barajar([us[iDestino]].concat(barajar(cerca).slice(0,3)));
+
+  return {tipo:'medir',
+          texto:'¿Cuántos <b>'+us[iDestino]+'</b> son <b>'+nf(valor, Number.isInteger(valor)?0:1)+' '+us[iOrigen]+'</b>?',
+          pista:'Mira la escalera: cada escalón es un cero.',
+          svg: escalera(us, iOrigen, iDestino), svgOk: escalera(us, iOrigen, iDestino),
+          valor: res, dec: dec, unidad: us[iDestino], unidades: unidades,
+          porque:'De '+us[iOrigen]+' a '+us[iDestino]+' hay '+saltos+
+                 (saltos===1?' escalón ':' escalones ')+(baja?'hacia abajo':'hacia arriba')+
+                 ', así que se '+(baja?'multiplica por ':'divide entre ')+factor+
+                 '. La coma se mueve '+saltos+(saltos===1?' sitio ':' sitios ')+
+                 (baja?'a la derecha':'a la izquierda')+'.'};
+}
+
+/* =====================================================================
+   RETO 1 · ¿Con qué se mide?
+   Magnitud, instrumento y unidad juntos. Es el calentamiento: lo que se
+   trabajó en la sesión de las cinco estaciones, preguntado de corrido.
+   ===================================================================== */
+const SITUACIONES = [
+  {q:'Quieres saber <b>cuánto tarda</b> una bola en bajar por la rampa.', i:'Cronómetro', u:'segundos (s)'},
+  {q:'Quieres saber <b>cuánto pesa</b> un puñado de arandelas.',          i:'Balanza',    u:'gramos (g)'},
+  {q:'Quieres saber <b>cuánto mide de largo</b> un tornillo.',            i:'Regla',      u:'milímetros (mm)'},
+  {q:'Quieres saber <b>cuánta agua</b> cabe en un vaso.',                 i:'Probeta',    u:'mililitros (mL)'},
+  {q:'Quieres saber <b>si el agua está caliente</b>.',                    i:'Termómetro', u:'grados (°C)'},
+  {q:'Quieres saber <b>el grosor</b> de una moneda con precisión.',       i:'Calibre',    u:'milímetros (mm)'},
+  {q:'Quieres saber <b>cuánto mide el aula</b> de largo.',                i:'Cinta métrica', u:'metros (m)'},
+  {q:'Quieres saber <b>cuánto pesas tú</b>.',                             i:'Báscula',    u:'kilogramos (kg)'},
+  {q:'Quieres saber <b>cuánto dura</b> el recreo.',                       i:'Reloj',      u:'minutos (min)'},
+  {q:'Quieres saber <b>cuánto líquido</b> te queda en la jeringuilla.',   i:'Jeringuilla graduada', u:'mililitros (mL)'}
+];
+const INSTRUMENTOS = ['Cronómetro','Balanza','Regla','Probeta','Termómetro','Calibre','Cinta métrica','Báscula','Reloj','Jeringuilla graduada'];
+const UNIDADES_TODAS = ['segundos (s)','gramos (g)','milímetros (mm)','mililitros (mL)','grados (°C)','metros (m)','kilogramos (kg)','minutos (min)'];
+
+const sacaSituacion = bolsa(SITUACIONES);
+
+function pregConQue(){
+  const c = sacaSituacion();
+  const buena = c.i + ' &middot; ' + c.u;
+  const malas = [];
+  /* los distractores no son al azar: o el instrumento correcto con la unidad
+     equivocada, o al revés. Así hay que leer las dos mitades. */
+  malas.push(c.i + ' &middot; ' + elegir(UNIDADES_TODAS.filter(u=>u!==c.u)));
+  malas.push(elegir(INSTRUMENTOS.filter(i=>i!==c.i)) + ' &middot; ' + c.u);
+  malas.push(elegir(INSTRUMENTOS.filter(i=>i!==c.i)) + ' &middot; ' + elegir(UNIDADES_TODAS.filter(u=>u!==c.u)));
+  const vistas = new Set([buena]);
+  const ops = [buena];
+  for(const m of malas){ if(!vistas.has(m)){ vistas.add(m); ops.push(m); } }
+  return {tipo:'opciones', texto:c.q, pista:'Elige el instrumento <b>y</b> la unidad. Las dos cosas tienen que estar bien.',
+          opciones:barajar(ops), correcta:buena};
+}
+
+/* =====================================================================
+   RETO 2 · Lee el instrumento
+   El núcleo. Se responde con un número Y una unidad, por separado.
+   ===================================================================== */
+/* con cuatro instrumentos y ocho preguntas, la bolsa reparte dos de cada:
+   además de no repetir, garantiza que ven los cuatro antes de acabar */
+const sacaInstrumento = bolsa([1,2,3,4]);
+
+function pregLeer(){
+  const cual = sacaInstrumento();
+  if(cual===1){
+    /* la regla. Al principio la pieza empieza en el cero; después, no, que
+       es donde se ve si han entendido que se mide restando. */
+    const desde = Math.random()<0.55 ? 0 : ale(1,5)*10;
+    const largo = ale(2,9)*10 + ale(0,1)*5;
+    return {tipo:'medir', texto:'¿Cuánto mide la pieza amarilla?',
+            pista: desde===0 ? 'Empieza en el cero. Lee dónde acaba.'
+                             : 'Ojo: <b>no empieza en el cero</b>. Mide lo que ocupa, no dónde acaba.',
+            svg: regla(desde, largo, false), svgOk: regla(desde, largo, true),
+            valor: largo, dec:0, unidad:'mm',
+            unidades:['mm','cm','g','mL'],
+            porque: desde===0 ? '' : 'Acaba en '+nf((desde+largo)/10,1)+' cm, pero empieza en '+nf(desde/10,1)+' cm. Lo que mide es la resta.'};
+  }
+  if(cual===2){
+    /* 100 o 200 mL para que el medio paso siga siendo un numero entero:
+       con una probeta de 50 las rayas finas caerian en 2,5 mL y esto no va
+       de decimales todavia */
+    const max = elegir([100,200]);
+    const paso = max/10;
+    /* nunca por encima del 85 % del vaso: casi llena, el menisco queda
+       pegado al borde y justo eso es lo que hay que aprender a mirar */
+    const v = ale(1, 17) * (paso/2);          // cae en raya fina o gorda
+    return {tipo:'medir', texto:'¿Cuánto líquido hay en la probeta?',
+            pista:'Se lee por <b>abajo</b> de la curva que hace el líquido.',
+            svg: probeta(v, max, paso, false), svgOk: probeta(v, max, paso, true),
+            valor: v, dec:0, unidad:'mL',
+            unidades:['mL','g','mm','°C'],
+            porque:'Cada raya gorda son '+paso+' mL, y entre dos gordas hay una fina que vale '+(paso/2)+' mL.'};
+  }
+  if(cual===3){
+    const v = ale(-8, 48);
+    return {tipo:'medir', texto:'¿Qué temperatura marca el termómetro?',
+            pista: v<0 ? 'Cuidado, está <b>por debajo del cero</b>.' : 'Mira hasta dónde llega la columna roja.',
+            svg: termometro(v, false), svgOk: termometro(v, true),
+            valor: v, dec:0, unidad:'°C',
+            unidades:['°C','mL','g','s'],
+            porque: v<0 ? 'Por debajo del cero la temperatura se escribe con un menos delante.' : ''};
+  }
+  const max = elegir([500,1000]);
+  const paso = max/10;
+  const v = ale(1, 49) * (paso/5);
+  return {tipo:'medir', texto:'¿Cuánto marca la balanza?',
+          pista:'Entre dos números grandes hay cuatro rayas finas.',
+          svg: balanza(v, max, false), svgOk: balanza(v, max, true),
+          valor: v, dec:0, unidad:'g',
+          unidades:['g','kg','mL','mm'],
+          porque:'De un número al siguiente hay '+paso+' g, repartidos en cinco huecos de '+(paso/5)+' g.'};
+}
+
+/* =====================================================================
+   RETO 3 · Medir bien
+   Lo que no cabe en una sola medida: repetir y hacer la media, pesar diez
+   y dividir, y que el instrumento decide cuántas cifras puedes escribir.
+   ===================================================================== */
+const sacaCaso = bolsa([1,2,3]);
+
+function pregMedirBien(){
+  const cual = sacaCaso();
+
+  if(cual===1){
+    /* tres tiempos y la media: exactamente lo de la estación 3 */
+    /* se elige PRIMERO la media y despues los tres tiempos, para que la
+       division salga exacta. Al reves, (4,2+4,4+3,9):3 da 4,1666... y el
+       alumno que lo hace bien tendria el fallo */
+    const media = ale(20,90)/10;
+    const d1 = ale(-4,4)/10, d2 = ale(-4,4)/10;
+    const t = [media+d1, media+d2, media-d1-d2].map(x=>Math.round(x*10)/10);
+    return {tipo:'medir', texto:'Habéis cronometrado la misma bajada <b>tres veces</b>: '+
+              t.map(x=>nf(x,1)+' s').join(' &nbsp;·&nbsp; ')+'. ¿Qué tiempo anotáis?',
+            pista:'Cuando se mide varias veces, se anota la <b>media</b>.',
+            svg:'', svgOk:'',
+            valor: media, dec:1, unidad:'s', unidades:['s','min','g','mm'],
+            porque:'Se suman los tres y se divide entre tres: ('+t.map(x=>nf(x,1)).join(' + ')+') : 3 = '+nf(media,1)+' s.'};
+  }
+
+  if(cual===2){
+    /* diez arandelas y dividir: la estación 2 */
+    const una = ale(12,48)/10;
+    const diez = Math.round(una*10*10)/10;
+    return {tipo:'medir', texto:'Diez arandelas iguales pesan <b>'+nf(diez,1)+' g</b>. ¿Cuánto pesa una?',
+            pista:'La balanza no aprecia el peso de una sola. Por eso se pesan diez.',
+            svg:'', svgOk:'',
+            valor: Math.round(una*10)/10, dec:1, unidad:'g', unidades:['g','kg','mL','s'],
+            porque:nf(diez,1)+' g entre 10 arandelas = '+nf(una,1)+' g cada una.'};
+  }
+
+  /* regla contra calibre: cuál de las dos lecturas se anota.
+
+     Antes esto preguntaba «¿cuál se puede escribir?» y tenía dos respuestas
+     buenas: con un calibre también se puede escribir 36 mm, solo que se
+     desaprovecha. Preguntando cuál se ANOTA hay una sola. */
+  let real = ale(120,480)/10;                 // en mm, con un decimal
+  if(Math.abs(real - Math.round(real)) < 0.001) real += 0.3;   // que no acabe en cero
+  const conRegla = Math.round(real);
+  const buena = nf(real,1)+' mm, la del calibre';
+  const ops = barajar([
+    buena,
+    conRegla+' mm, la de la regla',
+    nf((real+conRegla)/2, 2).replace(/0$/,'')+' mm, la media de las dos',
+    'Da igual cuál, es la misma pieza'
+  ]);
+  return {tipo:'opciones',
+          texto:'La misma pieza medida con la regla da <b>'+conRegla+' mm</b> y con el calibre '+
+                '<b>'+nf(real,1)+' mm</b>. ¿Cuál anotas?',
+          pista:'La regla llega al milímetro. El calibre llega a la <b>décima</b> de milímetro.',
+          opciones: ops, correcta: buena,
+          porque:'Se anota la del instrumento que aprecia más. La media no vale: '+
+                 'no son dos medidas distintas de la misma calidad, una es peor que la otra.'};
+}
+
+/* =====================================================================
+   RETO 4 · Con su unidad
+   La regla que atraviesa la unidad entera, preguntada de frente.
+   ===================================================================== */
+/* Nueve, que son las ocho de la tanda y una de repuesto: con menos, la
+   bolsa se vacía antes de acabar y alguna tendría que repetirse. */
+const SIN_UNIDAD = [
+  {mal:'He medido el tornillo y son 32.', bien:'32 mm', mala:'32', porque:'32 ¿qué? ¿Milímetros, centímetros, gramos? Sin unidad no es una medida.'},
+  {mal:'El agua está a 24.',              bien:'24 °C', mala:'24', porque:'Sin los grados, el número no dice nada.'},
+  {mal:'La cuerda mide 3.',               bien:'3 m',   mala:'3',  porque:'¿Tres metros o tres centímetros? No es lo mismo para nada.'},
+  {mal:'La piedra pesa 250.',             bien:'250 g', mala:'250',porque:'Sin la unidad podrían ser 250 g o 250 kg.'},
+  {mal:'La jeringuilla tiene 15.',        bien:'15 mL', mala:'15', porque:'Un número solo no se puede comparar con el de otro equipo.'},
+  {mal:'La bajada ha durado 8.',          bien:'8 s',   mala:'8',  porque:'¿Ocho segundos u ocho minutos? El cronómetro da segundos.'},
+  {mal:'El aula mide 7 de largo.',        bien:'7 m',   mala:'7',  porque:'Un aula de 7 cm no existe. Hay que decir en qué se mide.'},
+  {mal:'La arandela pesa 4,2.',           bien:'4,2 g', mala:'4,2',porque:'El número puede estar perfecto y la medida seguir sin servir.'},
+  {mal:'La botella tiene 500.',           bien:'500 mL',mala:'500',porque:'¿500 mL o 500 L? Una cabe en la mochila y la otra no.'}
+];
+
+/* las dos familias en una sola bolsa: once cosas para ocho preguntas, así
+   que dentro de una tanda no se repite ninguna. De paso el reparto sale
+   solo, cinco de una y seis de la otra */
+const sacaSinUnidad = bolsa(SIN_UNIDAD);
+
+function pregUnidad(){
+  const c = sacaSinUnidad();
+  {
+    const ops = barajar([c.bien, c.mala, c.bien.replace(/\s.*/,'') + ' unidades', 'No se puede saber']);
+    return {tipo:'opciones', texto:'Un compañero apunta: «<b>'+c.mal+'</b>» ¿Cómo tenía que haberlo escrito?',
+            pista:'Una medida es un número <b>y</b> una unidad. Siempre las dos.',
+            opciones:ops, correcta:c.bien, porque:c.porque};
+  }
+}
+
+/* ===================================================================== */
+const RETOS = [
+  {id:'conque', emoji:'🔎', nombre:'¿Con qué se mide?',
+   desc:'Cada magnitud tiene su instrumento y su unidad.', gen:pregConQue},
+  {id:'leer',   emoji:'📏', nombre:'Lee el instrumento',
+   desc:'Regla, probeta, termómetro y balanza. Lo que más cuesta.', gen:pregLeer},
+  {id:'bien',   emoji:'🎯', nombre:'Medir bien',
+   desc:'Repetir, hacer la media y saber cuántas cifras puedes escribir.', gen:pregMedirBien},
+  {id:'unidad', emoji:'✍️', nombre:'Con su unidad',
+   desc:'32 mm, no 32. Un número solo no es una medida.', gen:pregUnidad},
+  {id:'escalera', emoji:'🪜', nombre:'La escalera',
+   desc:'De km a mm y de vuelta, con la escalera entera delante.', gen:pregEscalera}
+];
+
+/* ---------------------------------------------------------- portada */
+function pintarMenu(){
+  $("menu").innerHTML = RETOS.map(r=>{
+    const hecho = (estado.sellos[r.id]||0) >= PARA_SELLO;
+    return '<button class="reto'+(hecho?' hecho':'')+'" data-r="'+r.id+'">'+
+      '<b>'+r.emoji+' '+r.nombre+'<span class="sello">'+(hecho?'🏅':'')+'</span></b>'+
+      '<small>'+r.desc+'</small></button>';
+  }).join("");
+  Array.prototype.forEach.call($("menu").children, b=>{
+    b.addEventListener("click", ()=>empezar(b.dataset.r));
+  });
+  const n = RETOS.filter(r=>(estado.sellos[r.id]||0)>=PARA_SELLO).length;
+  $("avanceTotal").innerHTML = n===0
+    ? 'Con <b>'+PARA_SELLO+' aciertos de '+RONDAS+'</b> en un reto te llevas su medalla.'
+    : 'Llevas <b>'+n+' de '+RETOS.length+'</b> medallas.' + (n===RETOS.length ? ' Ya está: enséñale el parte al profesor.' : '');
+}
+
+/* ---------------------------------------------------------- una ronda */
+function empezar(id){
+  vaciarBolsas();          // que la tanda empiece con todo dentro
+  estado.vistas = [];
+  estado.reto = RETOS.find(r=>r.id===id);
+  estado.ronda = 0; estado.aciertos = 0; estado.racha = 0; estado.mejorRacha = 0;
+  $("inicio").style.display="none"; $("final").style.display="none";
+  $("juego").style.display="flex";
+  siguiente();
+}
+
+/* La identidad de una pregunta: lo que se lee MÁS lo que hay que contestar.
+   Dos lecturas de la regla con longitudes distintas no son la misma
+   pregunta aunque el enunciado sea idéntico; dos veces la misma longitud,
+   sí lo son. */
+function huella(q){
+  return q.texto + ' || ' + (q.tipo==='opciones' ? q.correcta : q.valor);
+}
+
+function siguiente(){
+  if(estado.ronda >= RONDAS){ terminar(); return; }
+  estado.ronda++;
+  estado.respondida = false;
+  estado.unidadElegida = null;
+  /* las bolsas ya evitan que se repita la situación; esto evita además que
+     salga dos veces la misma lectura del mismo instrumento, que pasaba en
+     una tanda de cada veinte */
+  let q, intentos = 0;
+  do { q = estado.reto.gen(); intentos++; }
+  while(estado.vistas.indexOf(huella(q)) >= 0 && intentos < 40);
+  estado.vistas.push(huella(q));
+  estado.pregunta = q;
+  pintar();
+}
+
+function pintar(){
+  const q = estado.pregunta;
+  $("enunciado").innerHTML = q.texto;
+  $("pista").innerHTML = q.pista || '';
+  $("instrumento").innerHTML = q.svg || '';
+  $("progreso").style.width = Math.round((estado.ronda-1)/RONDAS*100)+'%';
+  $("racha").innerHTML = 'Pregunta <b>'+estado.ronda+'</b> de '+RONDAS+
+    (estado.racha>1 ? ' · <b>'+estado.racha+' seguidas</b>' : '');
+
+  if(q.tipo==='opciones'){
+    $("zona").innerHTML = '<div class="opciones">' + q.opciones.map((op,i)=>
+      '<button class="op" data-op="'+i+'"><span class="letra">'+LETRAS[i]+'</span><span>'+op+'</span></button>'
+    ).join("") + '</div>';
+    Array.prototype.forEach.call($("zona").querySelectorAll('.op'), b=>{
+      b.addEventListener("click", ()=>responderOpcion(Number(b.dataset.op), b));
+    });
+  } else {
+    $("zona").innerHTML =
+      '<div class="respuesta">' +
+        '<div class="campo"><label>Número</label><input id="campoNum" type="text" inputmode="decimal" autocomplete="off" placeholder="0"></div>' +
+        '<div class="unidades" id="uds">' + q.unidades.map(u=>
+          '<button class="uni" data-u="'+u+'" aria-pressed="false">'+u+'</button>').join("") +
+        '</div>' +
+      '</div>';
+    Array.prototype.forEach.call($("uds").children, b=>{
+      b.addEventListener("click", ()=>{
+        estado.unidadElegida = b.dataset.u;
+        Array.prototype.forEach.call($("uds").children, x=>x.setAttribute('aria-pressed', String(x===b)));
+      });
+    });
+    const c = $("campoNum");
+    c.addEventListener("keydown", e=>{ if(e.key==="Enter"){ comprobar(); } });
+    setTimeout(()=>c.focus(), 30);
+  }
+  pintarBarra();
+}
+
+function pintarBarra(){
+  const q = estado.pregunta;
+  let html = '';
+  if(!estado.respondida && q.tipo==='medir'){
+    html += '<button class="btn principal" id="btnComprobar">Comprobar</button>';
+  }
+  if(!estado.respondida){
+    html += '<button class="btn" id="btnSaltar">No lo sé, pasar</button>';
+  }
+  $("barra").innerHTML = html;
+  if($("btnComprobar")) $("btnComprobar").addEventListener("click", comprobar);
+  if($("btnSaltar")) $("btnSaltar").addEventListener("click", ()=>cerrar(false, 'Pasamos a la siguiente.'));
+}
+
+/* ------------------------------------------------------- responder */
+function responderOpcion(i, boton){
+  if(estado.respondida) return;
+  const q = estado.pregunta;
+  const bien = q.opciones[i] === q.correcta;
+  boton.classList.add(bien ? 'bien' : 'mal');
+  Array.prototype.forEach.call($("zona").querySelectorAll('.op'), b=>{
+    b.disabled = true;
+    if(q.opciones[Number(b.dataset.op)] === q.correcta) b.classList.add('bien');
+    else if(!b.classList.contains('mal')) b.classList.add('gris');
+  });
+  cerrar(bien, bien ? '¡Bien!' : 'No era esa.', q.porque);
+}
+
+function comprobar(){
+  if(estado.respondida) return;
+  const q = estado.pregunta;
+  const n = leerNumero($("campoNum").value);
+
+  if(n===null){
+    $("barra").innerHTML = '<span class="aviso no">Escribe un número primero.</span>';
+    setTimeout(pintarBarra, 1300);
+    return;
+  }
+  if(!estado.unidadElegida){
+    /* no se deja pasar sin unidad: es el punto de toda la unidad didáctica */
+    $("barra").innerHTML = '<span class="aviso no">Falta la unidad.'+
+      '<small>Un número solo no es una medida. Toca una de las unidades.</small></span>';
+    setTimeout(pintarBarra, 2200);
+    return;
+  }
+
+  const numOk = Math.abs(n - q.valor) < 0.001;
+  const uniOk = estado.unidadElegida === q.unidad;
+
+  if(q.svgOk) $("instrumento").innerHTML = q.svgOk;
+
+  if(numOk && uniOk){
+    cerrar(true, '¡Bien! ' + nf(q.valor, q.dec) + ' ' + q.unidad, q.porque);
+  } else if(numOk && !uniOk){
+    cerrar(false, 'El número está bien, pero la unidad no.',
+      'Has puesto <b>'+estado.unidadElegida+'</b> y era <b>'+q.unidad+'</b>. '+
+      'Una medida son las dos cosas: '+nf(q.valor,q.dec)+' '+q.unidad+'.');
+  } else {
+    cerrar(false, 'Era ' + nf(q.valor, q.dec) + ' ' + q.unidad, q.porque);
+  }
+}
+
+function cerrar(bien, mensaje, porque){
+  estado.respondida = true;
+  if(bien){
+    estado.aciertos++; estado.racha++;
+    if(estado.racha > estado.mejorRacha) estado.mejorRacha = estado.racha;
+  } else {
+    estado.racha = 0;
+  }
+  const q = estado.pregunta;
+  if(q.svgOk && $("instrumento").innerHTML) $("instrumento").innerHTML = q.svgOk;
+  $("barra").innerHTML =
+    '<span class="aviso '+(bien?'ok':'no')+'">'+mensaje+
+      (porque ? '<small>'+porque+'</small>' : '')+'</span>'+
+    '<button class="btn principal" id="btnSig">'+(estado.ronda>=RONDAS?'Ver el parte':'Siguiente')+'</button>';
+  $("btnSig").addEventListener("click", siguiente);
+  $("progreso").style.width = Math.round(estado.ronda/RONDAS*100)+'%';
+  setTimeout(()=>{ const b=$("btnSig"); if(b) b.focus(); }, 40);
+}
+
+/* ------------------------------------------------------- el parte */
+function terminar(){
+  const r = estado.reto;
+  /* se guarda el mejor intento, pero también el primero aunque sea un cero:
+     si no, el que saca 0 de 8 ve «sin hacer» y parece que no lo ha jugado */
+  const antes = estado.sellos[r.id];
+  if(antes === undefined || estado.aciertos > antes) estado.sellos[r.id] = estado.aciertos;
+
+  $("juego").style.display="none";
+  $("final").style.display="flex";
+
+  const filas = RETOS.map(x=>{
+    const a = estado.sellos[x.id];
+    const gana = (a||0) >= PARA_SELLO;
+    return '<div class="sello-fila'+(gana?' si':'')+'">'+
+      '<i>'+(gana?'🏅':x.emoji)+'</i>'+
+      '<b>'+x.nombre+'</b>'+
+      '<span>'+(a===undefined ? 'sin hacer' : a+' de '+RONDAS)+'</span></div>';
+  }).join("");
+
+  const ganadas = RETOS.filter(x=>(estado.sellos[x.id]||0)>=PARA_SELLO).length;
+  $("carnet").innerHTML =
+    '<h3>'+r.emoji+' '+r.nombre+': '+estado.aciertos+' de '+RONDAS+'</h3>'+
+    '<p class="quien">Mejor racha: '+estado.mejorRacha+
+      (estado.mejorRacha===1?' seguida':' seguidas')+' · '+
+      'Medallas: '+ganadas+' de '+RETOS.length+'</p>'+
+    '<div class="sellos">'+filas+'</div>'+
+    '<p class="quien" style="margin:14px 0 0">Enséñale esta pantalla al profesor, '+
+      'o hazle una foto. Esto no se guarda en ningún sitio.</p>';
+
+  pintarMenu();
+}
+
+$("btnVolver").addEventListener("click", ()=>{
+  $("juego").style.display="none"; $("inicio").style.display="flex"; pintarMenu();
+});
+$("btnOtra").addEventListener("click", ()=>{
+  $("final").style.display="none"; $("inicio").style.display="flex"; pintarMenu();
+});
+
+/* teclado: A-D para las opciones, Enter para seguir */
+document.addEventListener("keydown", e=>{
+  if($("juego").style.display==="none") return;
+  const enCampo = document.activeElement && document.activeElement.tagName==='INPUT';
+  if(e.key==="Enter"){
+    if($("btnSig")){ $("btnSig").click(); e.preventDefault(); return; }
+    if($("btnComprobar") && !enCampo){ $("btnComprobar").click(); e.preventDefault(); return; }
+  }
+  if(enCampo) return;
+  const idx = ["a","b","c","d"].indexOf(e.key.toLowerCase());
+  if(idx>=0){
+    const b = $("zona").querySelector('.op[data-op="'+idx+'"]');
+    if(b && !b.disabled){ b.click(); e.preventDefault(); }
+  }
+});
+
+pintarMenu();
+})();
+</script>
+</body>
+</html>
