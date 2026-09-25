@@ -232,6 +232,21 @@ function nf(x, dec){
   dec = dec===undefined ? 0 : dec;
   return x.toFixed(dec).replace('.', ',');
 }
+/* el mismo número pero sin decidir de antemano cuántos decimales lleva: se
+   enseñan los que tenga y ni uno más. Hace falta al corregir en la unidad
+   que eligió el alumno, porque 65 mm son 6,5 cm y 0,065 m, y cada uno lleva
+   los suyos. */
+function bonito(x){
+  return (Math.round(x*1e6)/1e6).toFixed(4)
+           .replace(/0+$/,'').replace(/\.$/,'').replace('.', ',');
+}
+/* una medida se puede escribir de varias formas, todas correctas. Esto monta
+   la tabla de equivalencias de una pregunta a partir de su valor. */
+function mismasMedidas(valor, pares){
+  const fuera = {};
+  for(const u in pares) fuera[u] = Math.round(valor*pares[u]*1e6)/1e6;
+  return fuera;
+}
 /* lo que teclea el alumno: admite coma y punto, y se traga los espacios */
 function leerNumero(t){
   const s = String(t).trim().replace(/\s+/g,'').replace(',', '.');
@@ -507,6 +522,11 @@ function pregEscalera(){
   const unidades = barajar([us[iDestino]].concat(barajar(cerca).slice(0,3)));
 
   return {tipo:'medir',
+          /* Aquí la unidad la pide el enunciado, así que sólo vale esa. Es lo
+             contrario que al leer un instrumento, donde «¿cuánto mide?» se
+             puede contestar bien en cm o en mm. Esta marca separa los dos
+             casos, que antes estaban mezclados y por eso se colaba el fallo. */
+          unidadPedida: true,
           texto:'¿Cuántos <b>'+us[iDestino]+'</b> son <b>'+nf(valor, Number.isInteger(valor)?0:1)+' '+us[iOrigen]+'</b>?',
           pista:'Mira la escalera: cada escalón es un cero.',
           svg: escalera(us, iOrigen, iDestino), svgOk: escalera(us, iOrigen, iDestino),
@@ -577,6 +597,7 @@ function pregLeer(){
             svg: regla(desde, largo, false), svgOk: regla(desde, largo, true),
             valor: largo, dec:0, unidad:'mm',
             unidades:['mm','cm','g','mL'],
+            equivale: mismasMedidas(largo, {cm: 0.1}),
             porque: desde===0 ? '' : 'Acaba en '+nf((desde+largo)/10,1)+' cm, pero empieza en '+nf(desde/10,1)+' cm. Lo que mide es la resta.'};
   }
   if(cual===2){
@@ -612,6 +633,7 @@ function pregLeer(){
           svg: balanza(v, max, false), svgOk: balanza(v, max, true),
           valor: v, dec:0, unidad:'g',
           unidades:['g','kg','mL','mm'],
+          equivale: mismasMedidas(v, {kg: 0.001}),
           porque:'De un número al siguiente hay '+paso+' g, repartidos en cinco huecos de '+(paso/5)+' g.'};
 }
 
@@ -637,7 +659,7 @@ function pregMedirBien(){
               t.map(x=>nf(x,1)+' s').join(' &nbsp;·&nbsp; ')+'. ¿Qué tiempo anotáis?',
             pista:'Cuando se mide varias veces, se anota la <b>media</b>.',
             svg:'', svgOk:'',
-            valor: media, dec:1, unidad:'s', unidades:['s','min','g','mm'],
+            valor: media, dec:1, unidad:'s', unidades:['s','°C','g','mm'],
             porque:'Se suman los tres y se divide entre tres: ('+t.map(x=>nf(x,1)).join(' + ')+') : 3 = '+nf(media,1)+' s.'};
   }
 
@@ -649,6 +671,7 @@ function pregMedirBien(){
             pista:'La balanza no aprecia el peso de una sola. Por eso se pesan diez.',
             svg:'', svgOk:'',
             valor: Math.round(una*10)/10, dec:1, unidad:'g', unidades:['g','kg','mL','s'],
+            equivale: mismasMedidas(Math.round(una*10)/10, {kg: 0.001}),
             porque:nf(diez,1)+' g entre 10 arandelas = '+nf(una,1)+' g cada una.'};
   }
 
@@ -858,19 +881,38 @@ function comprobar(){
     return;
   }
 
-  const numOk = Math.abs(n - q.valor) < 0.001;
-  const uniOk = estado.unidadElegida === q.unidad;
+  /* TODAS las formas correctas de escribir esta medida, no sólo una.
+     6,5 cm y 65 mm son lo mismo, y la regla está graduada en centímetros:
+     contestar en cm no es que valga, es lo más natural. Antes se guardaba
+     una única unidad buena y lo demás se daba por fallo, así que el alumno
+     que medía bien y escribía «6,5 cm» se llevaba un error que no era suyo. */
+  const vale = Object.assign({}, q.equivale || {});
+  vale[q.unidad] = q.valor;
+  const u = estado.unidadElegida;
+  const esperado = vale[u];
 
   if(q.svgOk) $("instrumento").innerHTML = q.svgOk;
 
-  if(numOk && uniOk){
-    cerrar(true, '¡Bien! ' + nf(q.valor, q.dec) + ' ' + q.unidad, q.porque);
-  } else if(numOk && !uniOk){
-    cerrar(false, 'El número está bien, pero la unidad no.',
-      'Has puesto <b>'+estado.unidadElegida+'</b> y era <b>'+q.unidad+'</b>. '+
-      'Una medida son las dos cosas: '+nf(q.valor,q.dec)+' '+q.unidad+'.');
+  if(esperado === undefined){
+    /* esa unidad no sirve para lo que se está midiendo */
+    cerrar(false, 'Esa no es la unidad.',
+      q.unidadPedida
+        ? 'Te lo ped&iacute;a en <b>' + q.unidad + '</b>, y son ' + bonito(q.valor) + '.'
+        : 'En <b>' + u + '</b> no se mide esto. Era ' + bonito(q.valor) + ' ' + q.unidad + '.');
+  } else if(Math.abs(n - esperado) < 1e-6){
+    const otras = Object.keys(vale).filter(x => x !== u);
+    cerrar(true, '¡Bien! ' + bonito(esperado) + ' ' + u,
+      otras.length
+        ? bonito(esperado) + ' ' + u + ' es lo mismo que ' +
+          otras.map(x => bonito(vale[x]) + ' ' + x).join(' y que ') +
+          '. Las dos formas están bien escritas.'
+        : q.porque);
   } else {
-    cerrar(false, 'Era ' + nf(q.valor, q.dec) + ' ' + q.unidad, q.porque);
+    /* la unidad vale; el número no. Se le corrige EN SU unidad, que es
+       donde lo va a entender, y no en la que se nos ocurrió a nosotros */
+    cerrar(false, 'En ' + u + ' son ' + bonito(esperado),
+      q.porque || (u !== q.unidad
+        ? 'Que es lo mismo que ' + bonito(q.valor) + ' ' + q.unidad + '.' : ''));
   }
 }
 
